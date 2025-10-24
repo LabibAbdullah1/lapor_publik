@@ -3,63 +3,54 @@
 namespace App\Http\Controllers;
 
 use App\Models\ReportPhoto;
+use App\Models\Report;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class ReportPhotoController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Simpan foto laporan ke database & storage.
      */
-    public function index()
+    public function store(Request $request, $reportId)
     {
-        
+        $request->validate([
+            'photo' => 'required|image|max:5120', // Maks 5MB
+        ]);
+
+        $report = Report::findOrFail($reportId);
+
+        $path = $request->file('photo')->store('report_photos', 'public');
+
+        ReportPhoto::create([
+            'report_id' => $report->id,
+            'file_path' => $path,
+            'uploaded_by' => Auth::id(),
+        ]);
+
+        return back()->with('success', 'Foto laporan berhasil diunggah.');
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Hapus foto laporan.
      */
-    public function create()
+    public function destroy($id)
     {
-        //
-    }
+        $photo = ReportPhoto::findOrFail($id);
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        // Hanya admin atau pemilik laporan yang boleh hapus
+        if (Auth::user()->role !== 'admin' && Auth::id() !== $photo->uploaded_by) {
+            abort(403, 'Anda tidak memiliki izin untuk menghapus foto ini.');
+        }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(ReportPhoto $report_Photo)
-    {
-        //
-    }
+        // Hapus file dari storage
+        if (Storage::disk('public')->exists($photo->file_path)) {
+            Storage::disk('public')->delete($photo->file_path);
+        }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(ReportPhoto $report_Photo)
-    {
-        //
-    }
+        $photo->delete();
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, ReportPhoto $report_Photo)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(ReportPhoto $report_Photo)
-    {
-        //
+        return back()->with('success', 'Foto berhasil dihapus.');
     }
 }

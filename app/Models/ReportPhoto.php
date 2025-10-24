@@ -4,10 +4,13 @@ namespace App\Models;
 
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
+
 
 class ReportPhoto extends Model
 {
     use LogsActivity;
+    
     // Fillable fields
     protected $fillable = [
         'report_id',
@@ -20,6 +23,17 @@ class ReportPhoto extends Model
     public function report()
     {
         return $this->belongsTo(Report::class);
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($photo) {
+            if(Storage::disk('public')->exists($photo->file_path)) {
+                Storage::disk('public')->delete($photo->file_path);
+            }
+        });
     }
 
     public function uploader()

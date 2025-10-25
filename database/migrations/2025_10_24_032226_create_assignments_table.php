@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('assigned_to')->constrained('users')->onDelete('cascade');
             $table->foreignId('assigned_by')->constrained('users')->onDelete('cascade');
             $table->timestamp('assigned_at')->useCurrent();
-            $table->timestamps('due_date');
+            $table->timestamps();
         });
     }
 

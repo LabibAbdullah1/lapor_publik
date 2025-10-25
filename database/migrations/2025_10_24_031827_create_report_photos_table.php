@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('report_id')->constrained('reports')->onDelete('cascade');
             $table->string('file_path');
             $table->foreignId('uploaded_by')->nullable()->constrained('users')->onDelete('set null');
-            $table->timestamps('uploaded_at');
+            $table->timestamps();
         });
     }
 
